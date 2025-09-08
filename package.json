@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "prod": "node server-production.js",
+    "vercel": "node server-vercel.js",
     "deploy": "bash deploy.sh",
     "check": "node check-deployment.js",
     "pm2:start": "pm2 start ecosystem.config.js --env production",

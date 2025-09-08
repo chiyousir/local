@@ -2,17 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "server-production.js",
+      "src": "server-vercel.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "server-production.js"
+      "dest": "server-vercel.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "DB_PATH": "/tmp/location_tracker.db"
   }
 }

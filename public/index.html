@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    <!--11 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>位置追踪 - 主页</title>
@@ -269,7 +270,7 @@
         const phone = localStorage.getItem('phone');
 
         if (!userId || !phone) {
-            window.location.href = '/';
+            window.location.href = '/login.html';
         }
 
         document.getElementById('userPhone').textContent = phone;
@@ -575,7 +576,7 @@
         function logout() {
             localStorage.removeItem('userId');
             localStorage.removeItem('phone');
-            window.location.href = '/';
+            window.location.href = '/login.html';
         }
 
         // 页面加载完成后初始化

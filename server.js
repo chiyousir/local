@@ -16,14 +16,20 @@ const io = socketIo(server, {
   }
 });
 
+const PORT = process.env.PORT || 3000;
+const DB_PATH = process.env.DB_PATH || './location_tracker.db';
+
 // 中间件
-app.use(cors());
+app.use(cors({
+  origin: "*",
+  credentials: true
+}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 
 // 数据库初始化
-const db = new sqlite3.Database('location_tracker.db');
+const db = new sqlite3.Database(DB_PATH);
 
 // 创建用户表
 db.serialize(() => {
@@ -54,7 +60,6 @@ app.post('/api/register', async (req, res) => {
     return res.status(400).json({ error: '手机号码和密码不能为空' });
   }
 
-  // 验证手机号码格式
   const phoneRegex = /^1[3-9]\d{9}$/;
   if (!phoneRegex.test(phone)) {
     return res.status(400).json({ error: '请输入有效的手机号码' });
@@ -117,40 +122,6 @@ app.post('/api/login', async (req, res) => {
   });
 });
 
-// 检查用户是否存在
-app.post('/api/check-user', (req, res) => {
-  const { phone } = req.body;
-  
-  if (!phone) {
-    return res.status(400).json({ error: '请输入手机号码' });
-  }
-
-  // 验证手机号码格式
-  const phoneRegex = /^1[3-9]\d{9}$/;
-  if (!phoneRegex.test(phone)) {
-    return res.status(400).json({ error: '请输入有效的手机号码' });
-  }
-
-  db.get('SELECT * FROM users WHERE phone = ?', [phone], (err, user) => {
-    if (err) {
-      return res.status(500).json({ error: '查询失败' });
-    }
-    
-    if (!user) {
-      return res.status(404).json({ error: '用户不存在' });
-    }
-    
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        phone: user.phone,
-        created_at: user.created_at
-      }
-    });
-  });
-});
-
 // 查询用户位置
 app.post('/api/location', (req, res) => {
   const { phone } = req.body;
@@ -159,7 +130,6 @@ app.post('/api/location', (req, res) => {
     return res.status(400).json({ error: '请输入手机号码' });
   }
 
-  // 验证手机号码格式
   const phoneRegex = /^1[3-9]\d{9}$/;
   if (!phoneRegex.test(phone)) {
     return res.status(400).json({ error: '请输入有效的手机号码' });
@@ -189,42 +159,6 @@ app.post('/api/location', (req, res) => {
         accuracy: location.accuracy,
         timestamp: location.timestamp
       }
-    });
-  });
-});
-
-// 查看所有位置记录（调试用）
-app.get('/api/debug/locations', (req, res) => {
-  db.all(`
-    SELECT l.*, u.phone as user_phone 
-    FROM locations l 
-    LEFT JOIN users u ON l.user_id = u.id 
-    ORDER BY l.timestamp DESC 
-    LIMIT 50
-  `, (err, locations) => {
-    if (err) {
-      return res.status(500).json({ error: '查询失败' });
-    }
-    
-    res.json({
-      success: true,
-      count: locations.length,
-      locations: locations
-    });
-  });
-});
-
-// 查看所有用户（调试用）
-app.get('/api/debug/users', (req, res) => {
-  db.all('SELECT * FROM users ORDER BY created_at DESC', (err, users) => {
-    if (err) {
-      return res.status(500).json({ error: '查询失败' });
-    }
-    
-    res.json({
-      success: true,
-      count: users.length,
-      users: users
     });
   });
 });
@@ -259,7 +193,6 @@ io.on('connection', (socket) => {
   console.log('用户连接:', socket.id);
   
   socket.on('location-update', (data) => {
-    // 广播位置更新给所有连接的客户端
     socket.broadcast.emit('location-updated', data);
   });
   
@@ -273,7 +206,30 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
-const PORT = process.env.PORT || 3000;
+// 健康检查
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// 错误处理
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: '服务器内部错误' });
+});
+
+// 404处理
+app.use((req, res) => {
+  res.status(404).json({ error: '页面不存在' });
+});
+
+// 启动服务器
 server.listen(PORT, () => {
-  console.log(`服务器运行在端口 ${PORT}`);
+  console.log(`🚀 服务器运行在端口 ${PORT}`);
+  console.log(`📱 访问地址: http://localhost:${PORT}`);
+  console.log(`📁 数据库: ${DB_PATH}`);
 });

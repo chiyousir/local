@@ -21,40 +21,38 @@
             padding: 20px;
         }
 
-        .container {
+        .login-container {
             background: white;
             border-radius: 20px;
-            padding: 40px 30px;
+            padding: 40px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 400px;
+            text-align: center;
         }
 
         .logo {
-            text-align: center;
-            margin-bottom: 30px;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #667eea;
         }
 
-        .logo h1 {
+        .title {
+            font-size: 1.5rem;
             color: #333;
-            font-size: 28px;
+            margin-bottom: 30px;
             font-weight: 600;
-        }
-
-        .logo p {
-            color: #666;
-            margin-top: 8px;
-            font-size: 14px;
         }
 
         .form-group {
             margin-bottom: 20px;
+            text-align: left;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #333;
+            color: #555;
             font-weight: 500;
         }
 
@@ -83,27 +81,26 @@
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s;
+            margin-bottom: 15px;
         }
 
         .btn:hover {
             transform: translateY(-2px);
         }
 
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
+        .btn:active {
+            transform: translateY(0);
         }
 
         .switch-form {
-            text-align: center;
-            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
         }
 
         .switch-form a {
             color: #667eea;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
         }
 
         .switch-form a:hover {
@@ -111,58 +108,44 @@
         }
 
         .error {
-            background: #fee;
-            color: #c33;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            color: #e74c3c;
             font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
         }
 
         .success {
-            background: #efe;
-            color: #3c3;
-            padding: 10px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+            color: #27ae60;
             font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
         }
 
         .loading {
             display: none;
-            text-align: center;
+            color: #667eea;
+            font-size: 14px;
             margin-top: 10px;
         }
 
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #667eea;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+            
+            .title {
+                font-size: 1.3rem;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">
-            <h1>📍 位置追踪</h1>
-            <p>安全、便捷的位置共享服务</p>
-        </div>
-
-        <div id="error-message" class="error" style="display: none;"></div>
-        <div id="success-message" class="success" style="display: none;"></div>
-
+    <div class="login-container">
+        <div class="logo">📍</div>
+        <h1 class="title">位置追踪</h1>
+        
         <!-- 登录表单 -->
-        <form id="loginForm">
+        <form id="loginForm" style="display: block;">
             <div class="form-group">
                 <label for="loginPhone">手机号码</label>
                 <input type="tel" id="loginPhone" placeholder="请输入手机号码" maxlength="11" required>
@@ -171,13 +154,12 @@
                 <label for="loginPassword">密码</label>
                 <input type="password" id="loginPassword" placeholder="请输入密码" required>
             </div>
-            <button type="submit" class="btn" id="loginBtn">
-                <span id="loginText">登录</span>
-                <div class="loading" id="loginLoading">
-                    <div class="spinner"></div>
-                    登录中...
-                </div>
-            </button>
+            <button type="submit" class="btn">登录</button>
+            <div class="switch-form">
+                还没有账号？<a href="#" id="showRegister">立即注册</a>
+            </div>
+            <div id="loginError" class="error"></div>
+            <div id="loginLoading" class="loading">登录中...</div>
         </form>
 
         <!-- 注册表单 -->
@@ -188,204 +170,163 @@
             </div>
             <div class="form-group">
                 <label for="registerPassword">密码</label>
-                <input type="password" id="registerPassword" placeholder="请输入密码（至少6位）" minlength="6" required>
+                <input type="password" id="registerPassword" placeholder="请设置密码（至少6位）" minlength="6" required>
             </div>
             <div class="form-group">
                 <label for="confirmPassword">确认密码</label>
                 <input type="password" id="confirmPassword" placeholder="请再次输入密码" minlength="6" required>
             </div>
-            <button type="submit" class="btn" id="registerBtn">
-                <span id="registerText">注册</span>
-                <div class="loading" id="registerLoading">
-                    <div class="spinner"></div>
-                    注册中...
-                </div>
-            </button>
+            <button type="submit" class="btn">注册</button>
+            <div class="switch-form">
+                已有账号？<a href="#" id="showLogin">立即登录</a>
+            </div>
+            <div id="registerError" class="error"></div>
+            <div id="registerSuccess" class="success"></div>
+            <div id="registerLoading" class="loading">注册中...</div>
         </form>
-
-        <div class="switch-form">
-            <a href="#" id="switchToRegister">还没有账号？立即注册</a>
-            <a href="#" id="switchToLogin" style="display: none;">已有账号？立即登录</a>
-        </div>
     </div>
 
     <script>
-        // DOM 元素
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        const switchToRegister = document.getElementById('switchToRegister');
-        const switchToLogin = document.getElementById('switchToLogin');
-        const errorMessage = document.getElementById('error-message');
-        const successMessage = document.getElementById('success-message');
-
-        // 切换表单
-        switchToRegister.addEventListener('click', (e) => {
+        // 表单切换
+        document.getElementById('showRegister').addEventListener('click', function(e) {
             e.preventDefault();
-            loginForm.style.display = 'none';
-            registerForm.style.display = 'block';
-            switchToRegister.style.display = 'none';
-            switchToLogin.style.display = 'block';
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
             clearMessages();
         });
 
-        switchToLogin.addEventListener('click', (e) => {
+        document.getElementById('showLogin').addEventListener('click', function(e) {
             e.preventDefault();
-            registerForm.style.display = 'none';
-            loginForm.style.display = 'block';
-            switchToLogin.style.display = 'none';
-            switchToRegister.style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
             clearMessages();
         });
-
-        // 显示错误信息
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.style.display = 'block';
-            successMessage.style.display = 'none';
-        }
-
-        // 显示成功信息
-        function showSuccess(message) {
-            successMessage.textContent = message;
-            successMessage.style.display = 'block';
-            errorMessage.style.display = 'none';
-        }
 
         // 清除消息
         function clearMessages() {
-            errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
+            document.getElementById('loginError').textContent = '';
+            document.getElementById('registerError').textContent = '';
+            document.getElementById('registerSuccess').textContent = '';
+            document.getElementById('loginLoading').style.display = 'none';
+            document.getElementById('registerLoading').style.display = 'none';
         }
 
-        // 设置加载状态
-        function setLoading(formType, isLoading) {
-            const btn = document.getElementById(formType + 'Btn');
-            const text = document.getElementById(formType + 'Text');
-            const loading = document.getElementById(formType + 'Loading');
-            
-            if (isLoading) {
-                btn.disabled = true;
-                text.style.display = 'none';
-                loading.style.display = 'block';
-            } else {
-                btn.disabled = false;
-                text.style.display = 'block';
-                loading.style.display = 'none';
-            }
+        // 手机号码验证
+        function validatePhone(phone) {
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            return phoneRegex.test(phone);
         }
 
         // 登录处理
-        loginForm.addEventListener('submit', async (e) => {
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const phone = document.getElementById('loginPhone').value;
             const password = document.getElementById('loginPassword').value;
-
-            if (!phone || !password) {
-                showError('请填写完整信息');
+            
+            if (!validatePhone(phone)) {
+                document.getElementById('loginError').textContent = '请输入有效的手机号码';
+                return;
+            }
+            
+            if (password.length < 6) {
+                document.getElementById('loginError').textContent = '密码至少6位';
                 return;
             }
 
-            setLoading('login', true);
-            clearMessages();
+            document.getElementById('loginLoading').style.display = 'block';
+            document.getElementById('loginError').textContent = '';
 
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ phone, password }),
+                    body: JSON.stringify({ phone, password })
                 });
 
                 const data = await response.json();
+                document.getElementById('loginLoading').style.display = 'none';
 
                 if (data.success) {
-                    showSuccess('登录成功！正在跳转...');
-                    // 保存用户信息到本地存储
+                    // 保存用户信息
                     localStorage.setItem('userId', data.userId);
                     localStorage.setItem('phone', data.phone);
+                    
                     // 跳转到主页
-                    setTimeout(() => {
-                        window.location.href = '/index.html';
-                    }, 1000);
+                    window.location.href = '/index.html';
                 } else {
-                    showError(data.error || '登录失败');
+                    document.getElementById('loginError').textContent = data.error || '登录失败';
                 }
             } catch (error) {
-                showError('网络错误，请重试');
-            } finally {
-                setLoading('login', false);
+                document.getElementById('loginLoading').style.display = 'none';
+                document.getElementById('loginError').textContent = '网络错误，请重试';
             }
         });
 
         // 注册处理
-        registerForm.addEventListener('submit', async (e) => {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const phone = document.getElementById('registerPhone').value;
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (!phone || !password || !confirmPassword) {
-                showError('请填写完整信息');
+            
+            if (!validatePhone(phone)) {
+                document.getElementById('registerError').textContent = '请输入有效的手机号码';
                 return;
             }
-
-            if (password !== confirmPassword) {
-                showError('两次输入的密码不一致');
-                return;
-            }
-
+            
             if (password.length < 6) {
-                showError('密码长度至少6位');
+                document.getElementById('registerError').textContent = '密码至少6位';
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                document.getElementById('registerError').textContent = '两次输入的密码不一致';
                 return;
             }
 
-            setLoading('register', true);
-            clearMessages();
+            document.getElementById('registerLoading').style.display = 'block';
+            document.getElementById('registerError').textContent = '';
+            document.getElementById('registerSuccess').textContent = '';
 
             try {
                 const response = await fetch('/api/register', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ phone, password }),
+                    body: JSON.stringify({ phone, password })
                 });
 
                 const data = await response.json();
+                document.getElementById('registerLoading').style.display = 'none';
 
                 if (data.success) {
-                    showSuccess('注册成功！请登录');
-                    // 切换到登录表单
+                    document.getElementById('registerSuccess').textContent = '注册成功！请登录';
+                    // 清空表单
+                    document.getElementById('registerForm').reset();
+                    // 3秒后切换到登录表单
                     setTimeout(() => {
-                        registerForm.style.display = 'none';
-                        loginForm.style.display = 'block';
-                        switchToLogin.style.display = 'none';
-                        switchToRegister.style.display = 'block';
+                        document.getElementById('registerForm').style.display = 'none';
+                        document.getElementById('loginForm').style.display = 'block';
                         clearMessages();
-                    }, 1500);
+                    }, 2000);
                 } else {
-                    showError(data.error || '注册失败');
+                    document.getElementById('registerError').textContent = data.error || '注册失败';
                 }
             } catch (error) {
-                showError('网络错误，请重试');
-            } finally {
-                setLoading('register', false);
+                document.getElementById('registerLoading').style.display = 'none';
+                document.getElementById('registerError').textContent = '网络错误，请重试';
             }
         });
 
-        // 手机号码输入格式化
-        document.querySelectorAll('input[type="tel"]').forEach(input => {
-            input.addEventListener('input', (e) => {
-                let value = e.target.value.replace(/\D/g, '');
-                if (value.length > 11) {
-                    value = value.slice(0, 11);
-                }
-                e.target.value = value;
-            });
-        });
+        // 检查是否已登录
+        if (localStorage.getItem('userId')) {
+            window.location.href = '/index.html';
+        }
     </script>
 </body>
 </html>

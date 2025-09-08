@@ -239,8 +239,23 @@
         </div>
     </div>
 
+    <!-- Leaflet地图库 -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 如果Leaflet加载失败，使用备用CDN
+        if (typeof L === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>');
+        }
+    </script>
+    
+    <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // 如果Socket.IO加载失败，使用备用CDN
+        if (typeof io === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"><\/script>');
+        }
+    </script>
     <script>
         let map;
         let userMarker;
@@ -259,14 +274,26 @@
 
         document.getElementById('userPhone').textContent = phone;
 
-        // 初始化Socket.IO
-        socket = io();
+        // 初始化Socket.IO（添加错误处理）
+        try {
+            socket = io();
+        } catch (error) {
+            console.error('Socket.IO初始化失败:', error);
+            socket = null;
+        }
 
         // 地图初始化
         function initMap() {
             const mapContainer = document.getElementById('mapContainer');
             if (mapContainer.offsetHeight === 0) {
                 mapContainer.style.height = '300px';
+            }
+
+            // 检查Leaflet是否加载成功
+            if (typeof L === 'undefined') {
+                console.error('Leaflet未加载，使用备用方案');
+                updateMapStatus('地图库加载失败', 'status-offline');
+                return;
             }
 
             try {

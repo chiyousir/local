@@ -205,12 +205,12 @@ io.on('connection', (socket) => {
 
 // 提供静态文件 - 主页面，负责路由
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'main.html'));
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
 
 // 处理index.html路由
  app.get('/index.html', (req, res) => {
-   res.sendFile(path.join(__dirname, 'public', 'clean.html'));
+   res.sendFile(path.join(__dirname, 'public', 'index.html'));
  });
 
 // 处理login.html路由

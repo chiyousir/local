@@ -36,6 +36,7 @@ NODE_ENV=production
 DB_PATH=./location_tracker.db
 ```
 
+
 ### 步骤4：自定义域名（可选）
 1. 在项目设置中添加域名
 2. 配置DNS解析

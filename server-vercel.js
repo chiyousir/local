@@ -209,9 +209,9 @@ app.get('/', (req, res) => {
 });
 
 // 处理index.html路由
-app.get('/index.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+ app.get('/index.html', (req, res) => {
+   res.sendFile(path.join(__dirname, 'public', 'index-fixed.html'));
+ });
 
 // 处理login.html路由
 app.get('/login.html', (req, res) => {

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图测试页面</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #333;
+            margin-top: 10px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🗺️ 地图功能测试</h1>
+        
+        <div class="test-section">
+            <h3>1. Leaflet库加载测试</h3>
+            <div id="leafletStatus" class="status info">检查中...</div>
+            <button onclick="testLeaflet()">重新测试</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>2. 地图容器测试</h3>
+            <div id="containerStatus" class="status info">检查中...</div>
+            <button onclick="testContainer()">重新测试</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>3. 地图瓦片加载测试</h3>
+            <div id="tileStatus" class="status info">检查中...</div>
+            <button onclick="testTiles()">重新测试</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>4. 地图显示测试</h3>
+            <div id="mapStatus" class="status info">检查中...</div>
+            <div class="map-container" id="testMap"></div>
+            <button onclick="initTestMap()">初始化地图</button>
+            <button onclick="testMarkers()">添加标记</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>5. 控制台日志</h3>
+            <div id="consoleLog" class="log"></div>
+            <button onclick="clearLog()">清除日志</button>
+        </div>
+        
+        <div class="test-section">
+            <h3>6. 网络连接测试</h3>
+            <div id="networkStatus" class="status info">检查中...</div>
+            <button onclick="testNetwork()">重新测试</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        let testMap = null;
+        let logContainer = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            logContainer = document.getElementById('consoleLog');
+            log('页面加载完成，开始测试...');
+            
+            // 运行所有测试
+            setTimeout(() => {
+                testLeaflet();
+                testContainer();
+                testNetwork();
+                testTiles();
+                initTestMap();
+            }, 500);
+        });
+
+        // 日志函数
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            console.log(logEntry);
+            
+            if (logContainer) {
+                logContainer.innerHTML += logEntry + '\n';
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        }
+
+        function clearLog() {
+            if (logContainer) {
+                logContainer.innerHTML = '';
+            }
+        }
+
+        // 测试Leaflet库
+        function testLeaflet() {
+            const statusEl = document.getElementById('leafletStatus');
+            
+            if (typeof L !== 'undefined') {
+                statusEl.className = 'status success';
+                statusEl.textContent = `✅ Leaflet库加载成功 (版本: ${L.version})`;
+                log('Leaflet库加载成功');
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Leaflet库加载失败';
+                log('Leaflet库加载失败');
+            }
+        }
+
+        // 测试地图容器
+        function testContainer() {
+            const statusEl = document.getElementById('containerStatus');
+            const container = document.getElementById('testMap');
+            
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = `✅ 地图容器正常 (${rect.width}x${rect.height})`;
+                    log(`地图容器尺寸: ${rect.width}x${rect.height}`);
+                } else {
+                    statusEl.className = 'status error';
+                    statusEl.textContent = '❌ 地图容器尺寸为0';
+                    log('地图容器尺寸为0');
+                }
+            } else {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ 找不到地图容器';
+                log('找不到地图容器');
+            }
+        }
+
+        // 测试网络连接
+        function testNetwork() {
+            const statusEl = document.getElementById('networkStatus');
+            
+            // 测试高德地图连接
+            const img = new Image();
+            img.onload = function() {
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ 网络连接正常，可以访问国内地图服务';
+                log('网络连接测试成功');
+            };
+            img.onerror = function() {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ 网络连接异常，无法访问地图服务';
+                log('网络连接测试失败');
+            };
+            img.src = 'https://webrd01.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x=512&y=512&z=10';
+        }
+
+        // 测试地图瓦片
+        function testTiles() {
+            const statusEl = document.getElementById('tileStatus');
+            
+            if (typeof L === 'undefined') {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Leaflet库未加载，无法测试瓦片';
+                return;
+            }
+
+            try {
+                const testTileLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                    attribution: '© 高德地图',
+                    maxZoom: 18,
+                    subdomains: ['1', '2', '3', '4']
+                });
+                
+                statusEl.className = 'status success';
+                statusEl.textContent = '✅ 地图瓦片配置正常';
+                log('地图瓦片配置测试成功');
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ 地图瓦片配置错误: ${error.message}`;
+                log(`地图瓦片配置错误: ${error.message}`);
+            }
+        }
+
+        // 初始化测试地图
+        function initTestMap() {
+            const statusEl = document.getElementById('mapStatus');
+            
+            if (typeof L === 'undefined') {
+                statusEl.className = 'status error';
+                statusEl.textContent = '❌ Leaflet库未加载';
+                return;
+            }
+
+            try {
+                // 清除现有地图
+                if (testMap) {
+                    testMap.remove();
+                }
+
+                // 创建新地图
+                testMap = L.map('testMap').setView([39.9042, 116.4074], 10);
+
+                // 添加瓦片层（使用高德地图）
+                L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                    attribution: '© 高德地图',
+                    maxZoom: 18,
+                    subdomains: ['1', '2', '3', '4']
+                }).addTo(testMap);
+
+                // 监听地图事件
+                testMap.on('load', () => {
+                    statusEl.className = 'status success';
+                    statusEl.textContent = '✅ 地图初始化成功';
+                    log('地图初始化成功');
+                });
+
+                testMap.on('tileerror', (e) => {
+                    log(`地图瓦片错误: ${e.tile.src}`);
+                });
+
+                statusEl.className = 'status info';
+                statusEl.textContent = '🔄 正在初始化地图...';
+                log('开始初始化地图');
+
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.textContent = `❌ 地图初始化失败: ${error.message}`;
+                log(`地图初始化失败: ${error.message}`);
+            }
+        }
+
+        // 测试标记
+        function testMarkers() {
+            if (!testMap) {
+                log('地图未初始化，无法添加标记');
+                return;
+            }
+
+            try {
+                // 添加测试标记
+                const marker = L.marker([39.9042, 116.4074]).addTo(testMap);
+                marker.bindPopup('测试标记 - 北京').openPopup();
+                
+                log('成功添加测试标记');
+            } catch (error) {
+                log(`添加标记失败: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

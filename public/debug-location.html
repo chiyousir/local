@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位置调试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .debug-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .debug-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .input-group label {
+            min-width: 100px;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn.success {
+            background: #28a745;
+        }
+
+        .btn.danger {
+            background: #dc3545;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .step-list li {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            background: #f8f9fa;
+        }
+
+        .step-list li.completed {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .step-list li.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+
+        .back-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background: #218838;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 位置调试工具</h1>
+            <p>排查为什么找不到用户位置信息</p>
+        </div>
+
+        <div class="debug-section">
+            <h3>📱 用户信息检查</h3>
+            <div class="input-group">
+                <label>手机号码:</label>
+                <input type="tel" id="phoneInput" placeholder="请输入要查询的手机号码" maxlength="11">
+                <button class="btn" onclick="checkUser()" id="checkUserBtn">检查用户</button>
+            </div>
+            <div id="userResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📍 位置信息检查</h3>
+            <div class="input-group">
+                <label>手机号码:</label>
+                <input type="tel" id="locationPhoneInput" placeholder="请输入要查询的手机号码" maxlength="11">
+                <button class="btn" onclick="checkLocation()" id="checkLocationBtn">检查位置</button>
+            </div>
+            <div id="locationResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔧 完整调试流程</h3>
+            <p>按照以下步骤排查问题：</p>
+            <ol class="step-list" id="debugSteps">
+                <li id="step1">检查用户是否已注册</li>
+                <li id="step2">检查用户是否已登录</li>
+                <li id="step3">检查用户是否开启了定位权限</li>
+                <li id="step4">检查位置信息是否已保存到数据库</li>
+                <li id="step5">检查位置查询逻辑是否正确</li>
+            </ol>
+            <button class="btn" onclick="runFullDebug()" id="debugBtn">开始完整调试</button>
+            <div id="debugResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 数据库状态检查</h3>
+            <div class="input-group">
+                <button class="btn" onclick="checkDatabase()" id="dbBtn">检查数据库状态</button>
+                <button class="btn" onclick="viewAllUsers()" id="usersBtn">查看所有用户</button>
+                <button class="btn" onclick="viewAllLocations()" id="locationsBtn">查看所有位置</button>
+            </div>
+            <div id="dbResult"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>💡 常见问题解决方案</h3>
+            <div class="status info">
+                <strong>问题1：用户已注册但找不到位置</strong><br>
+                可能原因：用户没有开启定位权限，或者位置信息没有成功保存到数据库。
+            </div>
+            <div class="status warning">
+                <strong>问题2：位置信息过期</strong><br>
+                位置信息可能已过期，建议用户重新开启定位权限并刷新页面。
+            </div>
+            <div class="status error">
+                <strong>问题3：数据库连接问题</strong><br>
+                检查服务器是否正常运行，数据库文件是否存在。
+            </div>
+            <div class="status info">
+                <strong>问题4：用户没有开启定位权限</strong><br>
+                用户需要主动允许浏览器获取位置权限，否则位置信息无法保存。
+            </div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='/'">返回主页</button>
+    </div>
+
+    <script>
+        // 检查用户是否存在
+        async function checkUser() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const btn = document.getElementById('checkUserBtn');
+            const result = document.getElementById('userResult');
+            
+            if (!phone) {
+                result.innerHTML = '<div class="status error">请输入手机号码</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '检查中...';
+
+            try {
+                // 这里我们需要创建一个新的API来检查用户是否存在
+                const response = await fetch('/api/check-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 用户存在</div>
+                        <div class="result-box">用户ID: ${data.user.id}
+注册时间: ${data.user.created_at}
+手机号码: ${data.user.phone}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status error">❌ 用户不存在</div>
+                        <div class="result-box">${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 检查失败</div>
+                    <div class="result-box">网络错误: ${error.message}</div>
+                `;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '检查用户';
+        }
+
+        // 检查位置信息
+        async function checkLocation() {
+            const phone = document.getElementById('locationPhoneInput').value.trim();
+            const btn = document.getElementById('checkLocationBtn');
+            const result = document.getElementById('locationResult');
+            
+            if (!phone) {
+                result.innerHTML = '<div class="status error">请输入手机号码</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '检查中...';
+
+            try {
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 找到位置信息</div>
+                        <div class="result-box">纬度: ${data.location.latitude}
+经度: ${data.location.longitude}
+精度: ${data.location.accuracy} 米
+更新时间: ${data.location.timestamp}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status error">❌ 未找到位置信息</div>
+                        <div class="result-box">${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 检查失败</div>
+                    <div class="result-box">网络错误: ${error.message}</div>
+                `;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '检查位置';
+        }
+
+        // 运行完整调试
+        async function runFullDebug() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const btn = document.getElementById('debugBtn');
+            const result = document.getElementById('debugResult');
+            
+            if (!phone) {
+                result.innerHTML = '<div class="status error">请输入手机号码</div>';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '调试中...';
+            
+            // 重置步骤状态
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step${i}`).className = '';
+            }
+
+            const steps = [
+                { id: 1, name: '检查用户是否已注册', check: checkUserExists },
+                { id: 2, name: '检查用户是否已登录', check: checkUserLogin },
+                { id: 3, name: '检查用户是否开启了定位权限', check: checkLocationPermission },
+                { id: 4, name: '检查位置信息是否已保存到数据库', check: checkLocationData },
+                { id: 5, name: '检查位置查询逻辑是否正确', check: checkLocationQuery }
+            ];
+
+            let debugLog = '开始调试流程...\n\n';
+            
+            for (const step of steps) {
+                document.getElementById(`step${step.id}`).className = '';
+                debugLog += `步骤 ${step.id}: ${step.name}\n`;
+                
+                try {
+                    const stepResult = await step.check(phone);
+                    if (stepResult.success) {
+                        document.getElementById(`step${step.id}`).className = 'completed';
+                        debugLog += `✅ ${stepResult.message}\n\n`;
+                    } else {
+                        document.getElementById(`step${step.id}`).className = 'error';
+                        debugLog += `❌ ${stepResult.message}\n\n`;
+                    }
+                } catch (error) {
+                    document.getElementById(`step${step.id}`).className = 'error';
+                    debugLog += `❌ 检查失败: ${error.message}\n\n`;
+                }
+            }
+
+            result.innerHTML = `
+                <div class="status info">调试完成</div>
+                <div class="result-box">${debugLog}</div>
+            `;
+
+            btn.disabled = false;
+            btn.textContent = '开始完整调试';
+        }
+
+        // 检查用户是否存在
+        async function checkUserExists(phone) {
+            try {
+                const response = await fetch('/api/check-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone }),
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    return { success: true, message: `用户存在 (ID: ${data.user.id}, 注册时间: ${data.user.created_at})` };
+                } else {
+                    return { success: false, message: `用户不存在: ${data.error}` };
+                }
+            } catch (error) {
+                return { success: false, message: `检查失败: ${error.message}` };
+            }
+        }
+
+        // 检查用户是否已登录
+        async function checkUserLogin(phone) {
+            // 这里可以检查用户是否在当前会话中登录
+            const userId = localStorage.getItem('userId');
+            const userPhone = localStorage.getItem('phone');
+            
+            if (userId && userPhone === phone) {
+                return { success: true, message: `用户已登录 (ID: ${userId})` };
+            } else {
+                return { success: false, message: '用户未登录或登录状态已过期' };
+            }
+        }
+
+        // 检查定位权限
+        async function checkLocationPermission(phone) {
+            if (!navigator.geolocation) {
+                return { success: false, message: '浏览器不支持地理位置功能' };
+            }
+            
+            return new Promise((resolve) => {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        resolve({ success: true, message: `定位权限正常，当前位置: ${position.coords.latitude}, ${position.coords.longitude}` });
+                    },
+                    (error) => {
+                        let message = '定位权限被拒绝';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                message = '用户拒绝了定位权限';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                message = '位置信息不可用';
+                                break;
+                            case error.TIMEOUT:
+                                message = '定位请求超时';
+                                break;
+                        }
+                        resolve({ success: false, message: message });
+                    },
+                    { timeout: 5000 }
+                );
+            });
+        }
+
+        // 检查位置数据
+        async function checkLocationData(phone) {
+            try {
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone }),
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    return { success: true, message: `位置数据存在 (纬度: ${data.location.latitude}, 经度: ${data.location.longitude}, 更新时间: ${data.location.timestamp})` };
+                } else {
+                    return { success: false, message: `位置数据不存在: ${data.error}` };
+                }
+            } catch (error) {
+                return { success: false, message: `检查失败: ${error.message}` };
+            }
+        }
+
+        // 检查位置查询逻辑
+        async function checkLocationQuery(phone) {
+            // 这里可以检查查询逻辑是否正确
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            if (!phoneRegex.test(phone)) {
+                return { success: false, message: '手机号码格式不正确' };
+            }
+            
+            return { success: true, message: '查询逻辑正常' };
+        }
+
+        // 检查数据库状态
+        async function checkDatabase() {
+            const btn = document.getElementById('dbBtn');
+            const result = document.getElementById('dbResult');
+            
+            btn.disabled = true;
+            btn.textContent = '检查中...';
+
+            try {
+                const [usersResponse, locationsResponse] = await Promise.all([
+                    fetch('/api/debug/users'),
+                    fetch('/api/debug/locations')
+                ]);
+
+                const usersData = await usersResponse.json();
+                const locationsData = await locationsResponse.json();
+
+                let resultHtml = '<div class="status success">✅ 数据库连接正常</div>';
+                resultHtml += `<div class="result-box">用户总数: ${usersData.count}
+位置记录总数: ${locationsData.count}
+
+最近的位置记录:
+${locationsData.locations.slice(0, 5).map(loc => 
+    `手机: ${loc.user_phone || loc.phone}, 位置: ${loc.latitude}, ${loc.longitude}, 时间: ${loc.timestamp}`
+).join('\n')}</div>`;
+
+                result.innerHTML = resultHtml;
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 数据库连接失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '检查数据库状态';
+        }
+
+        // 查看所有用户
+        async function viewAllUsers() {
+            const btn = document.getElementById('usersBtn');
+            const result = document.getElementById('dbResult');
+            
+            btn.disabled = true;
+            btn.textContent = '加载中...';
+
+            try {
+                const response = await fetch('/api/debug/users');
+                const data = await response.json();
+
+                if (data.success) {
+                    let resultHtml = `<div class="status success">✅ 找到 ${data.count} 个用户</div>`;
+                    resultHtml += '<div class="result-box">';
+                    data.users.forEach(user => {
+                        resultHtml += `ID: ${user.id}, 手机: ${user.phone}, 注册时间: ${user.created_at}\n`;
+                    });
+                    resultHtml += '</div>';
+                    result.innerHTML = resultHtml;
+                } else {
+                    result.innerHTML = `<div class="status error">❌ 查询失败: ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 查询失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '查看所有用户';
+        }
+
+        // 查看所有位置
+        async function viewAllLocations() {
+            const btn = document.getElementById('locationsBtn');
+            const result = document.getElementById('dbResult');
+            
+            btn.disabled = true;
+            btn.textContent = '加载中...';
+
+            try {
+                const response = await fetch('/api/debug/locations');
+                const data = await response.json();
+
+                if (data.success) {
+                    let resultHtml = `<div class="status success">✅ 找到 ${data.count} 条位置记录</div>`;
+                    resultHtml += '<div class="result-box">';
+                    data.locations.forEach(loc => {
+                        resultHtml += `手机: ${loc.user_phone || loc.phone}, 位置: ${loc.latitude}, ${loc.longitude}, 精度: ${loc.accuracy}m, 时间: ${loc.timestamp}\n`;
+                    });
+                    resultHtml += '</div>';
+                    result.innerHTML = resultHtml;
+                } else {
+                    result.innerHTML = `<div class="status error">❌ 查询失败: ${data.error}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 查询失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+
+            btn.disabled = false;
+            btn.textContent = '查看所有位置';
+        }
+
+        // 手机号码输入格式化
+        document.querySelectorAll('input[type="tel"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 11) {
+                    value = value.slice(0, 11);
+                }
+                e.target.value = value;
+            });
+        });
+    </script>
+</body>
+</html>

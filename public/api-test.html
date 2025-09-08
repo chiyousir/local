@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .test-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            background: #5a6fd8;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result-box {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .back-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+
+        .back-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 API测试工具</h1>
+            <p>测试所有API接口是否正常工作</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 基础连接测试</h3>
+            <button class="btn" onclick="testServerConnection()">测试服务器连接</button>
+            <div id="connectionResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>👥 用户相关API</h3>
+            <button class="btn" onclick="testCheckUser()">测试检查用户API</button>
+            <button class="btn" onclick="testDebugUsers()">测试查看所有用户API</button>
+            <div id="userResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📍 位置相关API</h3>
+            <button class="btn" onclick="testDebugLocations()">测试查看所有位置API</button>
+            <button class="btn" onclick="testLocationQuery()">测试位置查询API</button>
+            <div id="locationResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 完整API测试</h3>
+            <button class="btn" onclick="runAllTests()">运行所有测试</button>
+            <div id="allTestsResult"></div>
+        </div>
+
+        <button class="back-btn" onclick="window.location.href='/'">返回主页</button>
+    </div>
+
+    <script>
+        // 测试服务器连接
+        async function testServerConnection() {
+            const result = document.getElementById('connectionResult');
+            result.innerHTML = '<div class="status info">正在测试服务器连接...</div>';
+
+            try {
+                const response = await fetch('/');
+                if (response.ok) {
+                    result.innerHTML = '<div class="status success">✅ 服务器连接正常</div>';
+                } else {
+                    result.innerHTML = `<div class="status error">❌ 服务器响应异常: ${response.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="status error">❌ 服务器连接失败: ${error.message}</div>`;
+            }
+        }
+
+        // 测试检查用户API
+        async function testCheckUser() {
+            const result = document.getElementById('userResult');
+            result.innerHTML = '<div class="status info">正在测试检查用户API...</div>';
+
+            try {
+                const response = await fetch('/api/check-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone: '13800138000' }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 检查用户API正常</div>
+                        <div class="result-box">响应: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status success">✅ 检查用户API正常（用户不存在）</div>
+                        <div class="result-box">响应: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 检查用户API失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 测试查看所有用户API
+        async function testDebugUsers() {
+            const result = document.getElementById('userResult');
+            result.innerHTML = '<div class="status info">正在测试查看所有用户API...</div>';
+
+            try {
+                const response = await fetch('/api/debug/users');
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 查看所有用户API正常</div>
+                        <div class="result-box">用户数量: ${data.count}
+用户列表:
+${data.users.map(user => `ID: ${user.id}, 手机: ${user.phone}, 注册时间: ${user.created_at}`).join('\n')}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status error">❌ 查看所有用户API失败</div>
+                        <div class="result-box">错误: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 查看所有用户API失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 测试查看所有位置API
+        async function testDebugLocations() {
+            const result = document.getElementById('locationResult');
+            result.innerHTML = '<div class="status info">正在测试查看所有位置API...</div>';
+
+            try {
+                const response = await fetch('/api/debug/locations');
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 查看所有位置API正常</div>
+                        <div class="result-box">位置记录数量: ${data.count}
+位置记录:
+${data.locations.map(loc => `手机: ${loc.user_phone || loc.phone}, 位置: ${loc.latitude}, ${loc.longitude}, 时间: ${loc.timestamp}`).join('\n')}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status error">❌ 查看所有位置API失败</div>
+                        <div class="result-box">错误: ${data.error}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 查看所有位置API失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 测试位置查询API
+        async function testLocationQuery() {
+            const result = document.getElementById('locationResult');
+            result.innerHTML = '<div class="status info">正在测试位置查询API...</div>';
+
+            try {
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone: '13800138000' }),
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.innerHTML = `
+                        <div class="status success">✅ 位置查询API正常</div>
+                        <div class="result-box">响应: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <div class="status success">✅ 位置查询API正常（未找到位置）</div>
+                        <div class="result-box">响应: ${JSON.stringify(data, null, 2)}</div>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="status error">❌ 位置查询API失败</div>
+                    <div class="result-box">错误: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 运行所有测试
+        async function runAllTests() {
+            const result = document.getElementById('allTestsResult');
+            result.innerHTML = '<div class="status info">正在运行所有测试...</div>';
+
+            let testResults = [];
+            
+            // 测试服务器连接
+            try {
+                const response = await fetch('/');
+                testResults.push(`✅ 服务器连接: ${response.ok ? '正常' : '异常'}`);
+            } catch (error) {
+                testResults.push(`❌ 服务器连接: ${error.message}`);
+            }
+
+            // 测试所有API
+            const apis = [
+                { name: '检查用户', url: '/api/check-user', method: 'POST', body: { phone: '13800138000' } },
+                { name: '查看所有用户', url: '/api/debug/users', method: 'GET' },
+                { name: '查看所有位置', url: '/api/debug/locations', method: 'GET' },
+                { name: '位置查询', url: '/api/location', method: 'POST', body: { phone: '13800138000' } }
+            ];
+
+            for (const api of apis) {
+                try {
+                    const options = {
+                        method: api.method,
+                        headers: { 'Content-Type': 'application/json' }
+                    };
+                    
+                    if (api.body) {
+                        options.body = JSON.stringify(api.body);
+                    }
+
+                    const response = await fetch(api.url, options);
+                    const data = await response.json();
+                    
+                    if (data.success !== undefined) {
+                        testResults.push(`✅ ${api.name}: 正常`);
+                    } else {
+                        testResults.push(`⚠️ ${api.name}: 响应异常`);
+                    }
+                } catch (error) {
+                    testResults.push(`❌ ${api.name}: ${error.message}`);
+                }
+            }
+
+            result.innerHTML = `
+                <div class="status success">测试完成</div>
+                <div class="result-box">${testResults.join('\n')}</div>
+            `;
+        }
+    </script>
+</body>
+</html>

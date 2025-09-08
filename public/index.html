@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位置追踪 - 主页</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-phone {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .main-content {
+            height: calc(100vh - 60px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-section {
+            background: white;
+            padding: 20px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .search-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .phone-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .phone-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .location-info {
+            display: none; /* 已隐藏位置信息显示 */
+        }
+
+        .map-section {
+            flex: 1;
+            position: relative;
+            background: white;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+            min-height: 300px;
+        }
+
+        .location-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(255,255,255,0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .map-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255,255,255,0.9);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1001;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .map-loading.hidden {
+            display: none;
+        }
+
+        .status-online {
+            color: #28a745;
+        }
+
+        .status-offline {
+            color: #dc3545;
+        }
+
+        .permission-banner {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #ffeaa7;
+            display: none;
+        }
+
+        .permission-banner.show {
+            display: block;
+        }
+
+        .permission-btn {
+            background: #ffc107;
+            color: #212529;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid #f5c6cb;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            display: none;
+        }
+
+        .no-results.show {
+            display: block;
+        }
+
+        .no-results-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                padding: 12px 15px;
+            }
+            
+            .header h1 {
+                font-size: 18px;
+            }
+            
+            .search-section {
+                padding: 15px;
+            }
+            
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .location-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📍 位置追踪</h1>
+        <div class="user-info">
+            <span class="user-phone" id="userPhone"></span>
+            <button class="logout-btn" onclick="logout()">退出</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- 权限提示 -->
+        <div class="permission-banner" id="permissionBanner">
+            <div>📍 需要位置权限来显示您的位置</div>
+            <button class="permission-btn" onclick="requestLocationPermission()">开启定位</button>
+        </div>
+
+        <!-- 错误信息 -->
+        <div class="error-message" id="errorMessage"></div>
+
+        <!-- 搜索区域 -->
+        <div class="search-section">
+            <div class="search-title">对方手机号码</div>
+            <form class="search-form" id="searchForm">
+                <input type="tel" class="phone-input" id="phoneInput" placeholder="请输入对方手机号码" maxlength="11" required>
+                <button type="submit" class="search-btn" id="searchBtn">
+                    <span id="searchText">开始定位</span>
+                    <div class="loading" id="searchLoading">
+                        <div class="spinner"></div>
+                        定位中...
+                    </div>
+                </button>
+            </form>
+
+            <!-- 位置信息显示（已隐藏） -->
+            <div class="location-info" id="locationInfo" style="display: none;">
+                <div class="location-details">
+                    <div class="location-item">
+                        <div class="location-label">纬度</div>
+                        <div class="location-value" id="latitude">--</div>
+                    </div>
+                    <div class="location-item">
+                        <div class="location-label">经度</div>
+                        <div class="location-value" id="longitude">--</div>
+                    </div>
+                    <div class="location-item">
+                        <div class="location-label">精度</div>
+                        <div class="location-value" id="accuracy">--</div>
+                    </div>
+                    <div class="location-item">
+                        <div class="location-label">更新时间</div>
+                        <div class="location-value" id="updateTime">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 无结果提示 -->
+            <div class="no-results" id="noResults">
+                <div class="no-results-icon">🔍</div>
+                <div>未找到该用户的位置信息</div>
+                <div style="font-size: 14px; margin-top: 8px; opacity: 0.7;">
+                    请确保对方已注册并开启了位置权限
+                </div>
+            </div>
+        </div>
+
+        <!-- 地图区域 -->
+        <div class="map-section">
+            <div class="location-status" id="locationStatus">
+                <span id="statusText">等待定位...</span>
+            </div>
+            <div class="map-loading" id="mapLoading">
+                <div class="spinner"></div>
+                <div>正在加载地图...</div>
+            </div>
+            <div class="map-container" id="mapContainer"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/china-maps.js"></script>
+    <script src="/coordinate-converter.js"></script>
+    <script>
+        // 全局变量
+        let map;
+        let userMarker;
+        let targetMarker;
+        let watchId;
+        let socket;
+        let currentUser = null;
+        let currentMapSource = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            const userId = localStorage.getItem('userId');
+            const phone = localStorage.getItem('phone');
+            
+            if (!userId || !phone) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            currentUser = { userId, phone };
+            document.getElementById('userPhone').textContent = phone;
+
+            // 初始化地图
+            initMap();
+            
+            // 初始化Socket连接
+            initSocket();
+            
+            // 请求位置权限
+            requestLocationPermission();
+        });
+
+        // 初始化地图
+        function initMap() {
+            // 确保地图容器有明确的高度
+            const mapContainer = document.getElementById('mapContainer');
+            if (mapContainer.offsetHeight === 0) {
+                mapContainer.style.height = '300px';
+            }
+
+            try {
+                // 使用国内地图源创建地图
+                const mapResult = createMapWithFallback('mapContainer', {
+                    center: [39.9042, 116.4074], // 默认北京
+                    zoom: 10,
+                    fallbackSources: ['amap', 'baidu', 'tencent', 'osm']
+                });
+                
+                map = mapResult.map;
+                currentMapSource = mapResult.source;
+                console.log(`成功使用地图源: ${mapResult.sourceName} (${mapResult.coordinateSystem})`);
+                
+                // 更新状态显示
+                updateLocationStatus(`地图已加载 (${mapResult.sourceName})`, 'status-online');
+                
+            } catch (error) {
+                console.error('地图初始化失败:', error);
+                // 如果所有源都失败，创建一个基本的地图
+                map = L.map('mapContainer').setView([39.9042, 116.4074], 10);
+                updateLocationStatus('地图加载失败', 'status-offline');
+            }
+
+            // 添加用户位置标记
+            userMarker = L.marker([39.9042, 116.4074], {
+                icon: L.divIcon({
+                    className: 'user-marker',
+                    html: '<div style="background: #28a745; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">我</div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+
+            // 强制刷新地图
+            setTimeout(() => {
+                map.invalidateSize();
+                // 隐藏加载指示器
+                document.getElementById('mapLoading').classList.add('hidden');
+            }, 100);
+
+            // 监听地图加载完成事件
+            map.on('load', () => {
+                console.log('地图加载完成');
+                document.getElementById('mapLoading').classList.add('hidden');
+            });
+
+            // 监听地图瓦片加载错误
+            map.on('tileerror', (e) => {
+                console.error('地图瓦片加载错误:', e);
+            });
+
+            updateLocationStatus('等待定位...', 'status-offline');
+        }
+
+        // 初始化Socket连接
+        function initSocket() {
+            socket = io();
+            
+            socket.on('location-updated', (data) => {
+                console.log('收到位置更新:', data);
+                // 可以在这里处理其他用户的位置更新
+            });
+        }
+
+        // 请求位置权限
+        function requestLocationPermission() {
+            if (!navigator.geolocation) {
+                showError('您的浏览器不支持地理位置功能');
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    onLocationSuccess(position);
+                    hidePermissionBanner();
+                },
+                (error) => {
+                    onLocationError(error);
+                    showPermissionBanner();
+                },
+                options
+            );
+        }
+
+        // 位置获取成功
+        function onLocationSuccess(position) {
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            // 根据地图源转换坐标
+            let displayLat = latitude;
+            let displayLng = longitude;
+            
+            if (currentMapSource && currentMapSource !== 'osm') {
+                const converted = convertCoordinatesForMapSource(longitude, latitude, currentMapSource);
+                displayLng = converted[0];
+                displayLat = converted[1];
+                console.log(`坐标转换: WGS-84(${longitude}, ${latitude}) -> ${currentMapSource}(${displayLng}, ${displayLat})`);
+            }
+            
+            // 更新用户位置标记
+            userMarker.setLatLng([displayLat, displayLng]);
+            map.setView([displayLat, displayLng], 15);
+            
+            // 保存原始GPS坐标到服务器
+            saveLocationToServer(latitude, longitude, accuracy);
+            
+            // 开始持续定位
+            startWatchingLocation();
+            
+            updateLocationStatus('定位成功', 'status-online');
+        }
+
+        // 位置获取失败
+        function onLocationError(error) {
+            let message = '定位失败';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = '用户拒绝了位置权限请求';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = '位置信息不可用';
+                    break;
+                case error.TIMEOUT:
+                    message = '定位请求超时';
+                    break;
+            }
+            showError(message);
+            updateLocationStatus('定位失败', 'status-offline');
+        }
+
+        // 开始持续定位
+        function startWatchingLocation() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 30000,
+                maximumAge: 10000
+            };
+
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+                    
+                    // 根据地图源转换坐标
+                    let displayLat = latitude;
+                    let displayLng = longitude;
+                    
+                    if (currentMapSource && currentMapSource !== 'osm') {
+                        const converted = convertCoordinatesForMapSource(longitude, latitude, currentMapSource);
+                        displayLng = converted[0];
+                        displayLat = converted[1];
+                    }
+                    
+                    userMarker.setLatLng([displayLat, displayLng]);
+                    saveLocationToServer(latitude, longitude, accuracy);
+                },
+                (error) => {
+                    console.error('持续定位错误:', error);
+                },
+                options
+            );
+        }
+
+        // 保存位置到服务器
+        async function saveLocationToServer(latitude, longitude, accuracy) {
+            try {
+                await fetch('/api/save-location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: currentUser.userId,
+                        phone: currentUser.phone,
+                        latitude,
+                        longitude,
+                        accuracy
+                    }),
+                });
+            } catch (error) {
+                console.error('保存位置失败:', error);
+            }
+        }
+
+        // 搜索位置
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phoneInput').value.trim();
+            if (!phone) {
+                showError('请输入手机号码');
+                return;
+            }
+
+            // 验证手机号码格式
+            const phoneRegex = /^1[3-9]\d{9}$/;
+            if (!phoneRegex.test(phone)) {
+                showError('请输入有效的手机号码');
+                return;
+            }
+
+            setSearchLoading(true);
+            hideError();
+            hideLocationInfo();
+            hideNoResults();
+
+            try {
+                const response = await fetch('/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ phone }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 不显示详细信息，直接在地图上显示位置
+                    showLocationOnMap(data.location);
+                } else {
+                    showNoResults();
+                    showError(data.error || '查询失败');
+                }
+            } catch (error) {
+                showNoResults();
+                showError('网络错误，请重试');
+            } finally {
+                setSearchLoading(false);
+            }
+        });
+
+        // 显示位置信息（已禁用）
+        function showLocationInfo(location) {
+            // 不再显示详细位置信息
+            // 位置信息已隐藏，只在地图上显示
+        }
+
+        // 在地图上显示位置
+        function showLocationOnMap(location) {
+            // 移除之前的标记
+            if (targetMarker) {
+                map.removeLayer(targetMarker);
+            }
+
+            // 根据地图源转换坐标
+            let displayLat = location.latitude;
+            let displayLng = location.longitude;
+            
+            if (currentMapSource && currentMapSource !== 'osm') {
+                const converted = convertCoordinatesForMapSource(location.longitude, location.latitude, currentMapSource);
+                displayLng = converted[0];
+                displayLat = converted[1];
+                console.log(`目标位置坐标转换: WGS-84(${location.longitude}, ${location.latitude}) -> ${currentMapSource}(${displayLng}, ${displayLat})`);
+            }
+
+            // 添加新标记
+            targetMarker = L.marker([displayLat, displayLng], {
+                icon: L.divIcon({
+                    className: 'target-marker',
+                    html: '<div style="background: #dc3545; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold;">目</div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                })
+            }).addTo(map);
+
+            // 调整地图视图
+            map.setView([displayLat, displayLng], 15);
+        }
+
+        // 显示权限提示
+        function showPermissionBanner() {
+            document.getElementById('permissionBanner').classList.add('show');
+        }
+
+        // 隐藏权限提示
+        function hidePermissionBanner() {
+            document.getElementById('permissionBanner').classList.remove('show');
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorMessage').classList.add('show');
+        }
+
+        // 隐藏错误信息
+        function hideError() {
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        // 显示位置信息（已禁用）
+        function showLocationInfo(location) {
+            // 不再显示详细位置信息
+            // 位置信息已隐藏，只在地图上显示
+        }
+
+        // 隐藏位置信息（已禁用）
+        function hideLocationInfo() {
+            // 位置信息已永久隐藏
+        }
+
+        // 显示无结果
+        function showNoResults() {
+            document.getElementById('noResults').classList.add('show');
+        }
+
+        // 隐藏无结果
+        function hideNoResults() {
+            document.getElementById('noResults').classList.remove('show');
+        }
+
+        // 设置搜索加载状态
+        function setSearchLoading(loading) {
+            const btn = document.getElementById('searchBtn');
+            const text = document.getElementById('searchText');
+            const loadingEl = document.getElementById('searchLoading');
+            
+            if (loading) {
+                btn.disabled = true;
+                text.style.display = 'none';
+                loadingEl.style.display = 'block';
+            } else {
+                btn.disabled = false;
+                text.style.display = 'block';
+                loadingEl.style.display = 'none';
+            }
+        }
+
+        // 更新位置状态
+        function updateLocationStatus(text, className) {
+            const statusEl = document.getElementById('locationStatus');
+            statusEl.innerHTML = `<span id="statusText" class="${className}">${text}</span>`;
+        }
+
+        // 格式化时间
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN');
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('userId');
+            localStorage.removeItem('phone');
+            window.location.href = '/login.html';
+        }
+
+        // 手机号码输入格式化
+        document.getElementById('phoneInput').addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) {
+                value = value.slice(0, 11);
+            }
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>
